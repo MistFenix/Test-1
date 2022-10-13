@@ -255,6 +255,11 @@ def option3():
         ips.append(line.rstrip())
     #values = {'ip':'188.114.96.13'}
     #data = urllib.parse.urlencode(values).encode('utf-8')
+    global tasks
+    global threads
+    global counts
+    global possible_domain_count
+    global parsed_domain_count
     option = ''
     print('1. [FREE]ReverseIpLookup*')
     print('    *Max 10 domains per ip')
@@ -270,11 +275,6 @@ def option3():
     except:
         print('Wrong input. Please enter a number ...')
     if option == 1:
-        global tasks
-        global threads
-        global counts
-        global possible_domain_count
-        global parsed_domain_count
         possible_domain_count = 0
         parsed_domain_count = 0
         threads = 10
@@ -320,11 +320,6 @@ def option3():
     elif option == 3:
         print('Not working for now')
     elif option == 4:
-        global tasks
-        global threads
-        global counts
-        global possible_domain_count
-        global parsed_domain_count
         possible_domain_count = 0
         parsed_domain_count = 0
         threads = 10
