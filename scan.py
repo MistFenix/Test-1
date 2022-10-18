@@ -121,7 +121,7 @@ def option1():
     option = ''
     global threads, counts
     print("How much threads do you want?")
-    print("Recommended: 150")
+    print("Recommended: 100")
     threads = int(input())
     counts = 0
     print('1. Port 443')
@@ -183,7 +183,7 @@ def option1():
 
 def option2():
     print("How much threads do you want?")
-    print("Recommended: 150")
+    print("Recommended: 100")
     global threads, counts
     threads = int(input())
     counts = 0
