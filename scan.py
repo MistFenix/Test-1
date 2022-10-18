@@ -38,6 +38,8 @@ def cf_443_check(ip):
     except requests.exceptions.SSLError:
         print("Working host found!")
         tasks.put(str(ip) + ';cflare_output_443.txt')
+    except:
+        pass
     global counts
     counts-=1
 
