@@ -1,4 +1,4 @@
-# cf_scan_443
+# cdn_scan_80 + 443
 
 # Termux 
   > ## Installation 
