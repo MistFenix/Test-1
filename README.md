@@ -8,7 +8,7 @@
 
   > ## Start
   ```
-  cd cf_scan_443 | python3 scan.py
+  cd cf_scan_443; python3 scan.py
   ```
 
   > ## Output Result :
