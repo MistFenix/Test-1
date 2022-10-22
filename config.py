@@ -8,5 +8,8 @@ timeout_cf_443 = 5
 timeout_cf_80 = 5
 timeout_fastly_443 = 5
 timeout_fastly_80 = 5
-
+timeout_azure_443 = 5
+timeout_azure_80 = 5
+timeout_cfront_443 = 5
+timeout_cfront_80 = 5
 

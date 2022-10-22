@@ -79,6 +79,53 @@ def fastly_80_check(ip):
     global counts
     counts-=1
 
+def azure_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_azure_443), verify=False).text
+        if "<h2>" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';azure_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def azure_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_azure_80), verify=False).text
+        if "<h2>" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';azure_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cfront_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cfront_443), verify=False).text
+        if "<h2>" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cfront_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cfront_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_cfront_80), verify=False).text
+        if "<h2>" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cfront_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
 
 def translator1_check(ip):
     global counts
@@ -247,6 +294,137 @@ def option2():
     else:
         print('Invalid option. Please enter a number between 1 and 2.')
 
+def option2_1():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('azure_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=azure_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=azure_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('azure_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=azure_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=azure_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 2.')
+
+def option2_2():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('cfront_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cfront_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cfront_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('cfront_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cfront_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cfront_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 2.')
+
+def option2_3():
+    print('Do not work for now!')
+
 def option3():
     a = str(input("Enter filename with ip_list: "))
     ips = []
@@ -362,9 +540,12 @@ def print_menu():
 menu_options = {
     1: 'CloudFlare ip check',
     2: 'Fastly ip check',
-    3: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
-    4: 'Update CloudFlare ranges',
-    5: 'Exit',
+    3: 'Azure ip check',
+    4: 'CloudFront ip check',
+    5: '[Do not work]G-Core ip check',
+    6: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
+    7: 'Update CloudFlare ranges',
+    8: 'Exit',
 }
         
 if __name__=='__main__':
@@ -381,14 +562,20 @@ if __name__=='__main__':
         elif option == 2:
             option2()
         elif option == 3:
-            option3()
+            option2_1()
         elif option == 4:
-            option4()
+            option2_2()
         elif option == 5:
+            option2_3()
+        elif option == 6:
+            option3()
+        elif option == 7:
+            option4()
+        elif option == 8:
             print('Goodbye!')
             exit()
         else:
-            print('Invalid option. Please enter a number between 1 and 4.')
+            print('Invalid option. Please enter a number between 1 and 8.')
 
 
 
