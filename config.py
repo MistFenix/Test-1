@@ -12,4 +12,8 @@ timeout_azure_443 = 5
 timeout_azure_80 = 5
 timeout_cfront_443 = 5
 timeout_cfront_80 = 5
+timeout_arvan_443 = 5
+timeout_arvan_80 = 5
+timeout_verizon_443 = 5
+timeout_verizon_80 = 5
 

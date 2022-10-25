@@ -29,6 +29,20 @@ def FileHandler():
         else:
             time.sleep(2)
 
+def update_script(code):
+    if code == 1:
+        file_list = requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/file_list.txt', verify=False).text
+        for a in file_list.split('\n'):
+            if not os.path.exists(a):
+                rep = requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/'+str(a), verify=False)
+                open(str(a), "wb").write(rep.content)
+    else:
+        file_list = open("file_list.txt", "r")
+        for a in file_list.readlines():
+            if not os.path.exists(a):
+                rep = requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/'+str(a), verify=False)
+                open(str(a), "wb").write(rep.content)
+
 def cf_443_check(ip):
     global tasks
     try:
@@ -107,7 +121,7 @@ def cfront_443_check(ip):
     global tasks
     try:
         r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cfront_443), verify=False).text
-        if "<h2>" in r:
+        if "cloudfront" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';cfront_output_443.txt')
     except:
@@ -119,9 +133,57 @@ def cfront_80_check(ip):
     global tasks
     try:
         r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_cfront_80), verify=False).text
-        if "<h2>" in r:
+        if "cloudfront" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';cfront_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def arvan_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_arvan_443), verify=False).text
+        if "html" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';arvan_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def arvan_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_arvan_80), verify=False).text
+        if "html" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';arvan_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def verizon_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_verizon_443), verify=False).text
+        if "title" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';verizon_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def verizon_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_verizon_80), verify=False).text
+        if "title" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';verizon_output_80.txt')
     except:
         pass
     global counts
@@ -425,6 +487,134 @@ def option2_2():
 def option2_3():
     print('Do not work for now!')
 
+def option2_4():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('arvan_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=arvan_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=arvan_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('arvan_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=arvan_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=arvan_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 2.')
+
+def option2_5():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('verizon_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=verizon_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=verizon_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('verizon_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=verizon_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=verizon_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 2.')
+
 def option3():
     a = str(input("Enter filename with ip_list: "))
     ips = []
@@ -543,12 +733,22 @@ menu_options = {
     3: 'Azure ip check',
     4: 'CloudFront ip check',
     5: '[Do not work]G-Core ip check',
-    6: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
-    7: 'Update CloudFlare ranges',
-    8: 'Exit',
+    6: 'ArvanCloud ip check',
+    7: 'EdgeCast/Edgio/Verizon ip check',
+    8: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
+    9: 'Update CloudFlare ranges',
+    10: 'Exit',
 }
         
 if __name__=='__main__':
+    version = 0.4
+    try:
+        if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False).text) > float(version)):
+            update_script(1)
+        else:
+            update_script(0)
+    except:
+        pass
     threading.Thread(target=FileHandler, args=()).start()
     while(True):
         print_menu()
@@ -568,10 +768,14 @@ if __name__=='__main__':
         elif option == 5:
             option2_3()
         elif option == 6:
-            option3()
+            option2_4()
         elif option == 7:
-            option4()
+            option2_5()
         elif option == 8:
+            option3()
+        elif option == 9:
+            option4()
+        elif option == 10:
             print('Goodbye!')
             exit()
         else:
