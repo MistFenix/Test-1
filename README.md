@@ -3,7 +3,7 @@
 # Termux 
   > ## Installation 
   ```
-  pkg update && pkg install openssl wget python3 git -y && pip3 install waiting ipaddress alive-progress bs4 requests warnings && git clone https://github.com/SuspectWorkers/cf_scan_443 && cd cf_scan_443 && python3 scan.py
+  pkg update && pkg install openssl wget python3 git -y && pip3 install waiting ipaddress alive-progress bs4 requests && git clone https://github.com/SuspectWorkers/cf_scan_443 && cd cf_scan_443 && python3 scan.py
   ```
 
   > ## Start
