@@ -16,4 +16,6 @@ timeout_arvan_443 = 5
 timeout_arvan_80 = 5
 timeout_verizon_443 = 5
 timeout_verizon_80 = 5
+timeout_gcore_443 = 5
+timeout_gcore_80 = 5
 
