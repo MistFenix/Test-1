@@ -1,1 +1,1 @@
-pip install waiting ipaddress alive-progress bs4 warnings requests
+pip install waiting ipaddress alive-progress bs4 requests free-proxy

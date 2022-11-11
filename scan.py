@@ -12,10 +12,24 @@ import queue
 import ssl
 import config
 import warnings
+import platform
+import subprocess
+from fp.fp import FreeProxy
 
 warnings.filterwarnings("ignore")
 
 tasks = queue.Queue()
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 def FileHandler():
     global tasks
@@ -33,9 +47,8 @@ def update_script(code):
     if code == 1:
         file_list = requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/file_list.txt', verify=False).text
         for a in file_list.split('\n'):
-            if not os.path.exists(a):
-                rep = requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/'+str(a), verify=False)
-                open(str(a), "wb").write(rep.content)
+            rep = requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/'+str(a), verify=False)
+            open(str(a), "wb").write(rep.content)
     else:
         file_list = open("file_list.txt", "r")
         for a in file_list.readlines():
@@ -213,6 +226,34 @@ def translator2_check(ip):
         for domain in a['domains']:
             parsed_domain_count+=1
             tasks.put(str(domain) + ';ip_translator.txt')
+    counts-=1
+
+def hackertarget_check(ip):
+    global counts
+    global possible_domain_count
+    global parsed_domain_count
+    possible_domain_count=0
+    keks = True
+    while keks:
+        try:
+            proxy = FreeProxy().get()
+            proxies = {
+                'http': str(proxy),
+                'https': str(proxy),
+            }
+            req = requests.get('https://api.hackertarget.com/reverseiplookup/?q=%s' % ip, proxies=proxies, headers={'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+            the_page = req.text
+            if "No DNS" in the_page:
+                keks = False
+            elif "API" in the_page:
+                raise Exception("API Count Exceeded")
+            else:
+                for a in the_page.splitlines():
+                    parsed_domain_count+=1
+                    tasks.put(str(domain) + ';hackertarget.txt')
+            keks = False
+        except:
+            pass
     counts-=1
 
 def free_threads():
@@ -623,23 +664,23 @@ def option3():
         read.close()
     for line in lines:
         ips.append(line.rstrip())
-    #values = {'ip':'188.114.96.13'}
-    #data = urllib.parse.urlencode(values).encode('utf-8')
     global tasks
     global threads
     global counts
     global possible_domain_count
     global parsed_domain_count
     option = ''
-    print('1. [FREE]ReverseIpLookup*')
+    print('1. [FREE][UltraSLOW]ReverseIpLookup*')
     print('    *Max 10 domains per ip')
     print('2. [WIP][FREE]viewdns.info*')
     print('    *Needs proxy')
     print('3. [WIP][PAID]2ip.ru*')
     print('    *Needs captcha key + mb proxy')
-    print('4. [FREE]SecurityTrails*')
+    print('4. [WIP][FREE]SecurityTrails*')
     print('    *Maybe needs proxy')
     print('    *[WIP] = WorkInProgress')
+    print('5. [FREE][Ultra++Slow]HackerTarget API Bypassed*')
+    print('    *Best From ALL from Domain Count Perspective')
     try:
         option = int(input('Enter your choice: '))
     except:
@@ -710,11 +751,64 @@ def option3():
         print('Parsed domain count: ' + str(parsed_domain_count))
         tasks.put('Possible domain count: ' + str(possible_domain_count) + ';ip_translator.txt')
         tasks.put('Parsed domain count: ' + str(parsed_domain_count) + ';ip_translator.txt')
+    elif option == 5:
+        possible_domain_count = 0
+        parsed_domain_count = 0
+        threads = 100
+        counts = 0
+        with alive_bar(len(ips)) as bar:
+            for ip in ips:
+                if counts<=threads:
+                    threading.Thread(target=hackertarget_check, args=((str(ip)),)).start()
+                    counts+=1
+                    bar()
+                else:
+                    wait(lambda: free_threads(), timeout_seconds=12000, waiting_for="free threads")
+                    threading.Thread(target=hackertarget_check, args=((str(ip)),)).start()
+                    counts+=1
+                    bar()
+        wait(lambda: zero_threads(), timeout_seconds=12000, waiting_for="zero threads")
+        print('Possible domain count: ' + str(possible_domain_count))
+        print('Parsed domain count: ' + str(parsed_domain_count))
+        tasks.put('Possible domain count: ' + str(possible_domain_count) + ';hackertarget.txt')
+        tasks.put('Parsed domain count: ' + str(parsed_domain_count) + ';hackertarget.txt')
     else:
-        print('Invalid option. Please enter a number between 1 and 4.')
+        print('Invalid option. Please enter a number between 1 and 5.')
     #table = (soup.find("div", {"id" : "result-anchor"})).find_all("a", href=True)
     #for link in table:
     #    print(link.get('href').replace('http', 'https'))
+
+def tools():
+    option = ''
+    print('1. Subfinder - Subdomain Scanner Ultra')
+    print('2. SSL Check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        if platform.system() == 'Windows':
+            domain = str(input('Input domain to scan: '))
+            subprocess.run(f'subfinder_x86_64.exe -d {domain} -all -o {domain}.txt', stdout=subprocess.PIPE).stdout.decode('utf-8')
+        else:
+            domain = str(input('Input domain to scan: '))
+            subprocess.run(f'./subfinder_arm64 -d {domain} -all -o {domain}.txt', stdout=subprocess.PIPE).stdout.decode('utf-8')
+    elif option == 2:
+        domain_file = str(input('Enter filename with domain_list: '))
+        domains = []
+        with open(domain_file, 'r') as read:
+            lines = read.readlines()
+            read.close()
+        for line in lines:
+            domains.append(line.rstrip())
+        for domain in domains:
+            try:
+                requests.get('https://'+str(domain)+'/', headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+                print(f'{bcolors.OKGREEN} [+] ' + str(domain) + f'{bcolors.ENDC}')
+            except:
+                pass
+    else:
+        print('Invalid option. Please enter a number between 1 and 2.')
 
 def option4():
     a = urllib.request.urlopen(urllib.request.Request('https://www.cloudflare.com/ips-v4', data=None, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})).read()
@@ -736,12 +830,13 @@ menu_options = {
     6: 'ArvanCloud ip check',
     7: 'EdgeCast/Edgio/Verizon ip check',
     8: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
-    9: 'Update CloudFlare ranges',
-    10: 'Exit',
+    9: 'Tools',
+    10: 'Update CloudFlare ranges',
+    11: 'Exit',
 }
         
 if __name__=='__main__':
-    version = 0.4
+    version = 0.41
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False).text) > float(version)):
             update_script(1)
@@ -774,8 +869,10 @@ if __name__=='__main__':
         elif option == 8:
             option3()
         elif option == 9:
-            option4()
+            tools()
         elif option == 10:
+            option4()
+        elif option == 11:
             print('Goodbye!')
             exit()
         else:

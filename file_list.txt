@@ -11,3 +11,5 @@ get_ready.bat
 scan.py
 start.bat
 verizon_ranges.txt
+subfinder_arm64
+subfinder_x86_64.exe
