@@ -59,12 +59,15 @@ def update_script(code):
 def cf_443_check(ip):
     global tasks
     try:
-        requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cf_443), verify=False)
-    except requests.exceptions.ConnectTimeout:
-        pass
-    except requests.exceptions.SSLError:
-        print("Working host found!")
-        tasks.put(str(ip) + ';cflare_output_443.txt')
+        requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cf_443), headers={'Host':'sni.cloudflaressl.com'}, verify=False).text
+        if "html" in r or "error" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cflare_output_443.txt')
+    #except requests.exceptions.ConnectTimeout:
+        #pass
+    #except requests.exceptions.SSLError:
+        #print("Working host found!")
+        #tasks.put(str(ip) + ';cflare_output_443.txt')
     except:
         pass
     global counts
@@ -877,7 +880,8 @@ def tools():
             subprocess.run(f'subfinder_x86_64.exe -d {domain} -all -o {domain}.txt', stdout=subprocess.PIPE).stdout.decode('utf-8')
         else:
             domain = str(input('Input domain to scan: '))
-            subprocess.run(f'./subfinder_arm64 -d {domain} -all -o {domain}.txt', stdout=subprocess.PIPE).stdout.decode('utf-8')
+            #subprocess.run(f'./subfinder_arm64 -d {domain} -all -o {domain}.txt', stdout=subprocess.PIPE).stdout.decode('utf-8')
+            subprocess.run(f'./subfinder_arm64 -d {domain} -all -o {domain}.txt', capture_output=True).stdout.decode("utf-8")
     elif option == 2:
         domain_file = str(input('Enter filename with domain_list: '))
         domains = []
@@ -921,7 +925,7 @@ menu_options = {
 }
         
 if __name__=='__main__':
-    version = 0.42
+    version = 0.43
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False).text) > float(version)):
             update_script(1)
