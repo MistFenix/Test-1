@@ -184,7 +184,7 @@ def arvan_80_check(ip):
 def gcore_443_check(ip):
     global tasks
     try:
-        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_gcore_443), headers={'Host':'cdn-cm.wgcdn.co'}, verify=False, allow_redirects=False).text
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_gcore_443), headers={'Host':'gcore.freerunet.cf'}, verify=False, allow_redirects=False).text
         if "html" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';gcore_output_443.txt')
@@ -196,7 +196,7 @@ def gcore_443_check(ip):
 def gcore_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_gcore_80), headers={'Host':'cdn-cm.wgcdn.co'}, verify=False, allow_redirects=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_gcore_80), headers={'Host':'gcore.freerunet.cf'}, verify=False, allow_redirects=False).text
         if "html" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';gcore_output_80.txt')
@@ -925,7 +925,7 @@ menu_options = {
 }
         
 if __name__=='__main__':
-    version = 0.44
+    version = 0.45
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False).text) > float(version)):
             update_script(1)
