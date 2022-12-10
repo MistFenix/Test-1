@@ -185,7 +185,7 @@ def gcore_443_check(ip):
     global tasks
     try:
         r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_gcore_443), headers={'Host':'gcore.freerunet.cf'}, verify=False, allow_redirects=False).text
-        if "html" in r:
+        if len(r) == 0:
             print("Working host found!")
             tasks.put(str(ip) + ';gcore_output_443.txt')
     except:
@@ -197,7 +197,7 @@ def gcore_80_check(ip):
     global tasks
     try:
         r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_gcore_80), headers={'Host':'gcore.freerunet.cf'}, verify=False, allow_redirects=False).text
-        if "html" in r:
+        if len(r) == 0:
             print("Working host found!")
             tasks.put(str(ip) + ';gcore_output_80.txt')
     except:
