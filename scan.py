@@ -59,7 +59,7 @@ def update_script(code):
 def cf_443_check(ip):
     global tasks
     try:
-        requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cf_443), headers={'Host':'sni.cloudflaressl.com'}, verify=False).text
+        requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cf_443), headers={'Host':'sni.cloudflaressl.com'}, verify=False, allow_redirects=False).text
         if "html" in r or "error" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';cflare_output_443.txt')
@@ -76,7 +76,7 @@ def cf_443_check(ip):
 def cf_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_cf_80), verify=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_cf_80), verify=False, allow_redirects=False).text
         if "Direct IP access not allowed" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';cflare_output_80.txt')
@@ -88,7 +88,7 @@ def cf_80_check(ip):
 def fastly_443_check(ip):
     global tasks
     try:
-        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_fastly_443), verify=False).text
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_fastly_443), verify=False, allow_redirects=False).text
         if "Fastly error" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';fastly_output_443.txt')
@@ -100,7 +100,7 @@ def fastly_443_check(ip):
 def fastly_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_fastly_80), verify=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_fastly_80), verify=False, allow_redirects=False).text
         if "Fastly error" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';fastly_output_80.txt')
@@ -112,7 +112,7 @@ def fastly_80_check(ip):
 def azure_443_check(ip):
     global tasks
     try:
-        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_azure_443), verify=False).text
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_azure_443), verify=False, allow_redirects=False).text
         if "<h2>" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';azure_output_443.txt')
@@ -124,7 +124,7 @@ def azure_443_check(ip):
 def azure_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_azure_80), verify=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_azure_80), verify=False, allow_redirects=False).text
         if "<h2>" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';azure_output_80.txt')
@@ -136,7 +136,7 @@ def azure_80_check(ip):
 def cfront_443_check(ip):
     global tasks
     try:
-        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cfront_443), verify=False).text
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cfront_443), verify=False, allow_redirects=False).text
         if "cloudfront" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';cfront_output_443.txt')
@@ -148,7 +148,7 @@ def cfront_443_check(ip):
 def cfront_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_cfront_80), verify=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_cfront_80), verify=False, allow_redirects=False).text
         if "cloudfront" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';cfront_output_80.txt')
@@ -160,7 +160,7 @@ def cfront_80_check(ip):
 def arvan_443_check(ip):
     global tasks
     try:
-        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_arvan_443), verify=False).text
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_arvan_443), verify=False, allow_redirects=False).text
         if "html" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';arvan_output_443.txt')
@@ -172,7 +172,7 @@ def arvan_443_check(ip):
 def arvan_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_arvan_80), verify=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_arvan_80), verify=False, allow_redirects=False).text
         if "html" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';arvan_output_80.txt')
@@ -184,7 +184,7 @@ def arvan_80_check(ip):
 def gcore_443_check(ip):
     global tasks
     try:
-        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_gcore_443), headers={'Host':'cdn-cm.wgcdn.co'}, verify=False).text
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_gcore_443), headers={'Host':'cdn-cm.wgcdn.co'}, verify=False, allow_redirects=False).text
         if "html" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';gcore_output_443.txt')
@@ -196,7 +196,7 @@ def gcore_443_check(ip):
 def gcore_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_gcore_80), headers={'Host':'cdn-cm.wgcdn.co'}, verify=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_gcore_80), headers={'Host':'cdn-cm.wgcdn.co'}, verify=False, allow_redirects=False).text
         if "html" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';gcore_output_80.txt')
@@ -208,7 +208,7 @@ def gcore_80_check(ip):
 def verizon_443_check(ip):
     global tasks
     try:
-        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_verizon_443), verify=False).text
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_verizon_443), verify=False, allow_redirects=False).text
         if "title" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';verizon_output_443.txt')
@@ -220,7 +220,7 @@ def verizon_443_check(ip):
 def verizon_80_check(ip):
     global tasks
     try:
-        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_verizon_80), verify=False).text
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_verizon_80), verify=False, allow_redirects=False).text
         if "title" in r:
             print("Working host found!")
             tasks.put(str(ip) + ';verizon_output_80.txt')
@@ -925,7 +925,7 @@ menu_options = {
 }
         
 if __name__=='__main__':
-    version = 0.43
+    version = 0.44
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False).text) > float(version)):
             update_script(1)
