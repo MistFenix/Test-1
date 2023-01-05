@@ -13,3 +13,4 @@ start.bat
 verizon_ranges.txt
 subfinder_arm64
 subfinder_x86_64.exe
+volterra_ranges.txt

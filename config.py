@@ -24,4 +24,5 @@ timeout_verizon_443 = 5
 timeout_verizon_80 = 5
 timeout_gcore_443 = 5
 timeout_gcore_80 = 5
-
+timeout_volterra_443 = 5
+timeout_volterra_80 = 5
