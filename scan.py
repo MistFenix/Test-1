@@ -201,6 +201,7 @@ def azure_80_check(ip):
     global counts
     counts-=1
 
+#cfront 443 check does not work
 def cfront_443_check(ip):
     global tasks
     try:
@@ -405,6 +406,7 @@ def option1():
     counts = 0
     print('1. Port 443')
     print('2. Port 80')
+    print('3. Ping check')
     try:
         option = int(input('Enter your choice: '))
     except:
@@ -457,8 +459,32 @@ def option1():
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('cflare_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 2.')
+        print('Invalid option. Please enter a number between 1 and 3.')
 
 def option2():
     print("How much threads do you want?")
@@ -469,6 +495,7 @@ def option2():
     option = ''
     print('1. Port 443')
     print('2. Port 80')
+    print('3. Ping check')
     try:
         option = int(input('Enter your choice: '))
     except:
@@ -521,8 +548,32 @@ def option2():
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('fastly_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 2.')
+        print('Invalid option. Please enter a number between 1 and 3.')
 
 def option2_1():
     print("How much threads do you want?")
@@ -533,6 +584,7 @@ def option2_1():
     option = ''
     print('1. Port 443')
     print('2. Port 80')
+    print('3. Ping check')
     try:
         option = int(input('Enter your choice: '))
     except:
@@ -585,8 +637,32 @@ def option2_1():
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('azure_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 2.')
+        print('Invalid option. Please enter a number between 1 and 3.')
 
 def option2_2():
     print("How much threads do you want?")
@@ -597,6 +673,7 @@ def option2_2():
     option = ''
     print('1. Port 443')
     print('2. Port 80')
+    print('3. Ping check')
     try:
         option = int(input('Enter your choice: '))
     except:
@@ -649,8 +726,32 @@ def option2_2():
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('cfront_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 2.')
+        print('Invalid option. Please enter a number between 1 and 3.')
 
 def option2_3():
     print("How much threads do you want?")
@@ -661,6 +762,7 @@ def option2_3():
     option = ''
     print('1. Port 443')
     print('2. Port 80')
+    print('3. Ping check')
     try:
         option = int(input('Enter your choice: '))
     except:
@@ -713,8 +815,32 @@ def option2_3():
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('gcore_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 2.')
+        print('Invalid option. Please enter a number between 1 and 3.')
 
 def option2_4():
     print("How much threads do you want?")
@@ -726,6 +852,7 @@ def option2_4():
     work_host = ''
     print('1. Port 443')
     print('2. Port 80')
+    print('3. Ping check')
     try:
         option = int(input('Enter your choice: '))
         if option == 1:
@@ -780,8 +907,32 @@ def option2_4():
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('arvan_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 2.')
+        print('Invalid option. Please enter a number between 1 and 3.')
 
 def option2_5():
     print("How much threads do you want?")
@@ -792,6 +943,7 @@ def option2_5():
     option = ''
     print('1. Port 443')
     print('2. Port 80')
+    print('3. Ping check')
     try:
         option = int(input('Enter your choice: '))
     except:
@@ -844,8 +996,32 @@ def option2_5():
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('verizon_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 2.')
+        print('Invalid option. Please enter a number between 1 and 3.')
 
 def option3():
     a = str(input("Enter filename with ip_list: "))
@@ -1050,16 +1226,25 @@ def tools():
         print("How much threads do you want?")
         print("Recommended: 30")
         threads = int(input())
+        print('Do you want to reping previously scanned file? (y/n)')
+        previous = str(input())
         counts = 0
         ips = []
         f_name = str(input("Enter file name: "))
+        if f_name == '':
+            f_name = 'ip_pinger.txt'
         with open(f_name, 'r') as read:
             lines = read.readlines()
             read.close()
         count = 0
-        for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
-            count+=1
+        if previous == 'n':
+            for line in lines:
+                ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+                count+=1
+        if previous == 'y':
+            for line in lines:
+                ips.append(line)
+                count+=1
         with alive_bar(sum(len(l) for l in ips)) as bar:
             for x in range(count):
                 for y in range(len(ips[x])):
@@ -1106,7 +1291,7 @@ menu_options = {
 }
         
 if __name__=='__main__':
-    version = 0.48
+    version = 0.49
     print('Checking for updates...')
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False, timeout=5).text) > float(version)):
