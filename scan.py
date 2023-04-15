@@ -73,7 +73,7 @@ def ping(host):
 def FileHandler():
     global tasks, globalStop
     while True:
-    	if globalStop == True:
+        if globalStop == True:
             break
         if not tasks.empty():
             task = str(tasks.get()).split(';')
@@ -444,7 +444,7 @@ def cdn77_80_check(ip):
 def cdnetworks_443_check(ip):
     global tasks
     try:
-    	s = requests.Session()
+        s = requests.Session()
         s.mount('https://', FrontingAdapter(fronted_domain=str('img.eduwill.net')))
         r = s.get("https://" + str(ip) + "/", headers={"Host": "img.eduwill.net"}, timeout=int(config.timeout_cdnetworks_443), verify=False, allow_redirects=False).text
         if "title" in r:
@@ -1271,9 +1271,9 @@ def akamai():
     except:
         print('Wrong input. Please enter a number ...')
     if option == 1:
-    	print('Module is not ready')
-    	print('Work In Progress...')
-    	exit()
+        print('Module is not ready')
+        print('Work In Progress...')
+        exit()
         ips = []
         with open('verizon_ranges.txt', 'r') as read:
             lines = read.readlines()
@@ -1805,7 +1805,7 @@ def google():
         option = int(input('Enter your choice: '))
     except:
         print('Wrong input. Please enter a number ...')
-    elif option == 1:
+    if option == 1:
         ips = []
         with open('google_ranges.txt', 'r') as read:
             lines = read.readlines()
@@ -1844,7 +1844,7 @@ def ibmcloud():
         option = int(input('Enter your choice: '))
     except:
         print('Wrong input. Please enter a number ...')
-    elif option == 1:
+    if option == 1:
         ips = []
         with open('ibm_ranges.txt', 'r') as read:
             lines = read.readlines()
@@ -1972,7 +1972,7 @@ def limelight():
         option = int(input('Enter your choice: '))
     except:
         print('Wrong input. Please enter a number ...')
-    elif option == 1:
+    if option == 1:
         ips = []
         with open('limelight_ranges.txt', 'r') as read:
             lines = read.readlines()
@@ -2011,7 +2011,7 @@ def maxcdn():
         option = int(input('Enter your choice: '))
     except:
         print('Wrong input. Please enter a number ...')
-    elif option == 1:
+    if option == 1:
         ips = []
         with open('maxcdn_ranges.txt', 'r') as read:
             lines = read.readlines()
@@ -2510,7 +2510,7 @@ menu_options = {
 }
         
 if __name__=='__main__':
-	globalStop = False
+    globalStop = False
     version = 0.50
     print('Checking for updates...')
     try:
