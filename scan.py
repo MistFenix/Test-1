@@ -74,7 +74,7 @@ def FileHandler():
     global tasks, globalStop
     while True:
     	if globalStop == True:
-    		break
+            break
         if not tasks.empty():
             task = str(tasks.get()).split(';')
             with open(str(task[1]), 'a+') as out:
