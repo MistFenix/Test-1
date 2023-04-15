@@ -18,6 +18,7 @@ import socket
 from fp.fp import FreeProxy
 from requests.adapters import HTTPAdapter
 import platform
+import hashlib
 
 warnings.filterwarnings("ignore")
 
@@ -70,8 +71,10 @@ def ping(host):
     return subprocess.call(command, stdout=subprocess.DEVNULL) == 0
 
 def FileHandler():
-    global tasks
+    global tasks, globalStop
     while True:
+    	if globalStop == True:
+    		break
         if not tasks.empty():
             task = str(tasks.get()).split(';')
             with open(str(task[1]), 'a+') as out:
@@ -80,6 +83,13 @@ def FileHandler():
             tasks.task_done()
         else:
             time.sleep(2)
+
+def md5Checksum(file_name):
+	with open(str(file_name), "rb") as f:
+	    file_hash = hashlib.md5()
+	    while chunk := f.read(8192):
+	        file_hash.update(chunk)
+	return file_hash.hexdigest()
 
 def update_script(code):
     if code == 1:
@@ -96,15 +106,17 @@ def update_script(code):
 
 def cdn_check(domain, hostname, path, right_answer):
     try:
-        r = requests.get('http://'+str(domain)+str(path), allow_redirects=False, verify=False, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36', 'Host': str(hostname)})
+        r = requests.get('http://'+str(domain)+str(path), allow_redirects=False, verify=False, timeout=10, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36', 'Host': str(hostname)})
         if str(right_answer) in r.text:
             print(f'{bcolors.OKGREEN} [+] ' + '80 HTTP ' + str(domain) + f'{bcolors.ENDC}')
+            tasks.put(str(domain) + ';custom_output_80.txt')
     except:
         pass
     try:
-        r = requests.get('https://'+str(domain)+str(path), verify=False, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36', 'Host': str(hostname)})
+        r = requests.get('https://'+str(domain)+str(path), verify=False, timeout=10, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36', 'Host': str(hostname)})
         if str(right_answer) in r.text:
             print(f'{bcolors.OKGREEN} [+] ' + '443 TLS ' + str(domain) + f'{bcolors.ENDC}')
+            tasks.put(str(domain) + ';custom_output_443.txt')
     except:
         pass
     global counts
@@ -329,6 +341,227 @@ def volterra_80_check(ip):
         pass
     global counts
     counts-=1
+    
+def akamai_443_check(ip):
+    global tasks
+    print('Sorry... This method is not ready')
+    print('Work in progress...')
+    exit()
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_akamai_443), headers={'Host':'volterra.hetzner.bfgdrm.buzz'}, verify=False).text
+        if "title" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';akamai_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def akamai_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_akamai_80), verify=False).text
+        if "Invalid URL" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';akamai_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def alibaba_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_alibaba_443), verify=False).text
+        if "ERROR" in r or "404 Not Found" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';alibaba_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def alibaba_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_alibaba_80), verify=False).text
+        if "ERROR" in r or "404 Not Found" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';alibaba_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cachefly_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_cachefly_443), verify=False).text
+        if "Hostname not configured" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cachefly_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cachefly_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_cachefly_80), verify=False).text
+        if "Hostname not configured" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cachefly_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cdn77_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/1", headers={'Host':'a.realsrv.com'}, timeout=int(config.timeout_cdn77_443), verify=False).text
+        if "404 Not Found" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cdn77_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cdn77_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/1", headers={'Host':'a.realsrv.com'}, timeout=int(config.timeout_cdn77_80), verify=False).text
+        if "404 Not Found" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cdn77_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cdnetworks_443_check(ip):
+    global tasks
+    try:
+    	s = requests.Session()
+        s.mount('https://', FrontingAdapter(fronted_domain=str('img.eduwill.net')))
+        r = s.get("https://" + str(ip) + "/", headers={"Host": "img.eduwill.net"}, timeout=int(config.timeout_cdnetworks_443), verify=False, allow_redirects=False).text
+        if "title" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cdnetworks_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def cdnetworks_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", headers={'Host':'img.eduwill.net'}, timeout=int(config.timeout_cdnetworks_80), verify=False).text
+        if "302 Found" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';cdnetworks_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def ddos_guard_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_ddos_guard_443), verify=False).text
+        if "DDoS-Guard" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';ddos_guard_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def ddos_guard_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_ddos_guard_80), verify=False).text
+        if "DDoS-Guard" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';ddos_guard_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def imperva_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_imperva_443), verify=False).text
+        if "Incapsula" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';imperva_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def imperva_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_imperva_80), verify=False).text
+        if "Incapsula" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';imperva_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def stackpath_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_stackpath_443), verify=False)
+        if 404 == int(r.status_code):
+            print("Working host found!")
+            tasks.put(str(ip) + ';stackpath_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def stackpath_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_stackpath_80), verify=False)
+        if 404 == int(r.status_code):
+            print("Working host found!")
+            tasks.put(str(ip) + ';stackpath_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def sucuri_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", timeout=int(config.timeout_sucuri_443), verify=False).text
+        if "Sucuri" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';sucuri_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def sucuri_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", timeout=int(config.timeout_sucuri_80), verify=False).text
+        if "Sucuri" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';sucuri_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
 
 def translator1_check(ip):
     global counts
@@ -418,7 +651,7 @@ def option1():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -442,7 +675,7 @@ def option1():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -466,7 +699,7 @@ def option1():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -507,7 +740,7 @@ def option2():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -531,7 +764,7 @@ def option2():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -555,7 +788,7 @@ def option2():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -596,7 +829,7 @@ def option2_1():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -620,7 +853,7 @@ def option2_1():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -644,7 +877,7 @@ def option2_1():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -685,7 +918,7 @@ def option2_2():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -709,7 +942,7 @@ def option2_2():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -733,7 +966,7 @@ def option2_2():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -774,7 +1007,7 @@ def option2_3():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -798,7 +1031,7 @@ def option2_3():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -822,7 +1055,7 @@ def option2_3():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -866,7 +1099,7 @@ def option2_4():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -890,7 +1123,7 @@ def option2_4():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -914,7 +1147,7 @@ def option2_4():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -955,7 +1188,7 @@ def option2_5():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -979,7 +1212,7 @@ def option2_5():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
 
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -1003,7 +1236,967 @@ def option2_5():
             read.close()
         count = 0
         for line in lines:
-            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def akamai():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+    	print('Module is not ready')
+    	print('Work In Progress...')
+    	exit()
+        ips = []
+        with open('verizon_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=verizon_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=verizon_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('akamai_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=akamai_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=akamai_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('akamai_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def alibaba():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('alibaba_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=alibaba_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=alibaba_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('alibaba_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=alibaba_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=alibaba_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('alibaba_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def cachefly():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('cachefly_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cachefly_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cachefly_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('cachefly_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cachefly_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cachefly_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('cachefly_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def cdn77():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('cdn77_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cdn77_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cdn77_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('cdn77_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cdn77_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cdn77_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('cdn77_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def cdnetworks():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('cdnetworks_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cdnetworks_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cdnetworks_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('cdnetworks_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=cdnetworks_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=cdnetworks_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('cdnetworks_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def ddosguard():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('ddos_guard_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ddos_guard_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ddos_guard_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('ddos_guard_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ddos_guard_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ddos_guard_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('ddos_guard_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def google():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    elif option == 1:
+        ips = []
+        with open('google_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 1.')
+
+def ibmcloud():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    elif option == 1:
+        ips = []
+        with open('ibm_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 1.')
+
+def imperva():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('imperva_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=imperva_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=imperva_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('imperva_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=imperva_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=imperva_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('imperva_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def limelight():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    elif option == 1:
+        ips = []
+        with open('limelight_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 1.')
+
+def maxcdn():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    elif option == 1:
+        ips = []
+        with open('maxcdn_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 1.')
+
+def stackpath():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('stackpath_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=stackpath_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=stackpath_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('stackpath_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=stackpath_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=stackpath_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('stackpath_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
+def sucuri():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('sucuri_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=sucuri_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=sucuri_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('sucuri_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=sucuri_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=sucuri_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('sucuri_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
             count+=1
         
         with alive_bar(sum(len(l) for l in ips)) as bar:
@@ -1239,28 +2432,40 @@ def tools():
         count = 0
         if previous == 'n':
             for line in lines:
-                ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1])])
+                ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
                 count+=1
+            with alive_bar(sum(len(l) for l in ips)) as bar:
+                for x in range(count):
+                    for y in range(len(ips[x])):
+                        if counts<=threads:
+                            threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                            counts+=1
+                            bar()
+                        else:
+                            wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                            threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                            counts+=1
+                            bar()
         if previous == 'y':
             for line in lines:
-                ips.append(line)
+                ips.append(line[:len(line) - 1])
                 count+=1
-        with alive_bar(sum(len(l) for l in ips)) as bar:
-            for x in range(count):
-                for y in range(len(ips[x])):
+            print(ips)
+            with alive_bar(len(ips)) as bar:
+                for x in range(count):
                     if counts<=threads:
-                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        threading.Thread(target=ping_check, args=(str(ips[x]),)).start()
                         counts+=1
                         bar()
                     else:
                         wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
-                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        threading.Thread(target=ping_check, args=(str(ips[x]),)).start()
                         counts+=1
                         bar()
             wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
             print('Work Finished!')
     else:
-        print('Invalid option. Please enter a number between 1 and 4.')
+        print('Invalid option. Please enter a number between 1 and 5.')
 
 def option4():
     a = urllib.request.urlopen(urllib.request.Request('https://www.cloudflare.com/ips-v4', data=None, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})).read()
@@ -1281,17 +2486,32 @@ menu_options = {
     5: 'G-Core ip check',
     6: 'ArvanCloud ip check',
     7: 'EdgeCast/Edgio/Verizon ip check',
-    8: '[WIP]Volterra/F5.com ip check',
-    9: '[WIP]UDomain ip check',
-    10: 'SECRET',
-    11: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
-    12: 'Tools',
-    13: 'Update CloudFlare ranges',
-    14: 'Exit',
+    8: 'Akamai ip check',
+    9: 'Alibaba ip check',
+    10: 'CacheFly ip check',
+    11: 'CDN77 ip check',
+    12: 'CDNetworks ip check',
+    13: 'DDOS-GUARD.RU ip check',
+    14: 'GoogleCDN ip check',
+    15: 'IBM ip check',
+    16: 'Imperva ip check',
+    17: 'LeaseWeb ip check',
+    18: 'Lumen CDN (Formerly Level3) ip check',
+    19: 'LimeLight ip check',
+    20: 'MaxCDN ip check',
+    21: 'StackPath ip check',
+    22: 'Sucuri ip check',
+    23: '[WIP]Volterra/F5.com ip check',
+    24: '[WIP]UDomain ip check',
+    25: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
+    26: 'Tools',
+    27: '[DO NOT USE]Update CloudFlare ranges',
+    28: 'Exit',
 }
         
 if __name__=='__main__':
-    version = 0.49
+	globalStop = False
+    version = 0.50
     print('Checking for updates...')
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False, timeout=5).text) > float(version)):
@@ -1323,14 +2543,49 @@ if __name__=='__main__':
             option2_4()
         elif option == 7:
             option2_5()
+        elif option == 8:
+            akamai()
+        elif option == 9:
+            alibaba()
+        elif option == 10:
+            cachefly()
         elif option == 11:
-            option3()
+        	cdn77()
         elif option == 12:
-            tools()
+            cdnetworks()
         elif option == 13:
-            option4()
+            ddosguard()
         elif option == 14:
+            google()
+        elif option == 15:
+            ibmcloud()
+        elif option == 16:
+            imperva()
+        elif option == 17:
+            print('Will be released in next update...')
+        elif option == 18:
+            print('Find website under lumen cdn.. i will release it then')
+        elif option == 19:
+            limelight()
+        elif option == 20:
+            maxcdn()
+        elif option == 21:
+            stackpath()
+        elif option == 22:
+            sucuri()
+        elif option == 23:
+            print('WIP')
+        elif option == 24:
+            print('WIP')
+        elif option == 25:
+            option3()
+        elif option == 26:
+            tools()
+        elif option == 27:
+            option4()
+        elif option == 28:
             print('Goodbye!')
+            globalStop = True
             exit()
         else:
             print('Invalid option. Please enter a number between 1 and 8.')
