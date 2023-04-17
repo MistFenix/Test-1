@@ -44,3 +44,5 @@ timeout_stackpath_443 = 5
 timeout_stackpath_80 = 5
 timeout_sucuri_443 = 5
 timeout_sucuri_80 = 5
+timeout_edgecenter_443 = 5
+timeout_edgecenter_80 = 5

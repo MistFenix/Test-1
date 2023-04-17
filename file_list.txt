@@ -29,3 +29,5 @@ subfinder_x86_64.exe
 sucuri_ranges.txt
 verizon_ranges.txt
 volterra_ranges.txt
+edgecenter_ranges.txt
+ngenix_ranges.txt

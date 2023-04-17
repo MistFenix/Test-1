@@ -563,6 +563,30 @@ def sucuri_80_check(ip):
     global counts
     counts-=1
 
+def edgecenter_443_check(ip):
+    global tasks
+    try:
+        r = requests.get("https://" + str(ip) + "/", headers={'Host': 'static.wasd.tv'}, timeout=int(config.timeout_edgecenter_443), verify=False).text
+        if "AccessDenied" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';edgecenter_output_443.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
+def edgecenter_80_check(ip):
+    global tasks
+    try:
+        r = requests.get("http://" + str(ip) + "/", headers={'Host': 'static.wasd.tv'}, timeout=int(config.timeout_edgecenter_80), verify=False).text
+        if "AccessDenied" in r:
+            print("Working host found!")
+            tasks.put(str(ip) + ';edgecenter_output_80.txt')
+    except:
+        pass
+    global counts
+    counts-=1
+
 def translator1_check(ip):
     global counts
     global possible_domain_count
@@ -2216,6 +2240,95 @@ def sucuri():
     else:
         print('Invalid option. Please enter a number between 1 and 3.')
 
+def edgecenter():
+    print("How much threads do you want?")
+    print("Recommended: 100")
+    global threads, counts
+    threads = int(input())
+    counts = 0
+    option = ''
+    print('1. Port 443')
+    print('2. Port 80')
+    print('3. Ping check')
+    try:
+        option = int(input('Enter your choice: '))
+    except:
+        print('Wrong input. Please enter a number ...')
+    if option == 1:
+        ips = []
+        with open('edgecenter_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=edgecenter_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=edgecenter_443_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 2:
+        ips = []
+        with open('edgecenter_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=edgecenter_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=edgecenter_80_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    elif option == 3:
+        ips = []
+        with open('edgecenter_ranges.txt', 'r') as read:
+            lines = read.readlines()
+            read.close()
+        count = 0
+        for line in lines:
+            ips.append([str(ip) for ip in ipaddress.IPv4Network(line[:len(line) - 1], False)])
+            count+=1
+        
+        with alive_bar(sum(len(l) for l in ips)) as bar:
+            for x in range(count):
+                for y in range(len(ips[x])):
+                    if counts<=threads:
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+                    else:
+                        wait(lambda: free_threads(), timeout_seconds=120, waiting_for="free threads")
+                        threading.Thread(target=ping_check, args=((str(ips[x][y])),)).start()
+                        counts+=1
+                        bar()
+            wait(lambda: zero_threads(), timeout_seconds=120, waiting_for="zero threads")
+            print('Work Finished!')
+    else:
+        print('Invalid option. Please enter a number between 1 and 3.')
+
 def option3():
     a = str(input("Enter filename with ip_list: "))
     ips = []
@@ -2337,6 +2450,13 @@ def option3():
     #table = (soup.find("div", {"id" : "result-anchor"})).find_all("a", href=True)
     #for link in table:
     #    print(link.get('href').replace('http', 'https'))
+
+def resellers():
+	with open('resellers.txt', 'r') as file:
+		lines = file.readlines()
+		file.close()
+	for line in lines:
+		print(line)
 
 def tools():
     global threads, counts
@@ -2501,17 +2621,19 @@ menu_options = {
     20: 'MaxCDN ip check',
     21: 'StackPath ip check',
     22: 'Sucuri ip check',
-    23: '[WIP]Volterra/F5.com ip check',
-    24: '[WIP]UDomain ip check',
-    25: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
-    26: 'Tools',
-    27: '[DO NOT USE]Update CloudFlare ranges',
-    28: 'Exit',
+    23: 'EdgeCenter.ru ip check (Megafon+VK+MTS CDN)',
+    24: '[WIP]Volterra/F5.com ip check',
+    25: '[WIP]UDomain ip check',
+    26: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
+    27: 'Tools',
+    28: '[DO NOT USE]Update CloudFlare ranges',
+    29: 'CDN RESELLERS'
+    30: 'Exit',
 }
         
 if __name__=='__main__':
     globalStop = False
-    version = 0.50
+    version = 0.52
     print('Checking for updates...')
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False, timeout=5).text) > float(version)):
@@ -2574,16 +2696,20 @@ if __name__=='__main__':
         elif option == 22:
             sucuri()
         elif option == 23:
-            print('WIP')
+            edgecenter()
         elif option == 24:
             print('WIP')
         elif option == 25:
-            option3()
+            print('WIP')
         elif option == 26:
-            tools()
+            option3()
         elif option == 27:
-            option4()
+            tools()
         elif option == 28:
+            option4()
+        elif option == 29:
+        	resellers()
+        elif option == 30:
             print('Goodbye!')
             globalStop = True
             exit()
