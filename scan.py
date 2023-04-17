@@ -2627,7 +2627,7 @@ menu_options = {
     26: '[WIP]IP to Domain Translator(After 10 checks ip ban)',
     27: 'Tools',
     28: '[DO NOT USE]Update CloudFlare ranges',
-    29: 'CDN RESELLERS'
+    29: 'CDN RESELLERS',
     30: 'Exit',
 }
         
