@@ -2268,6 +2268,7 @@ def edgecenter():
             for x in range(count):
                 for y in range(len(ips[x])):
                     if counts<=threads:
+                        print(1)
                         threading.Thread(target=edgecenter_443_check, args=((str(ips[x][y])),)).start()
                         counts+=1
                         bar()
@@ -2633,7 +2634,7 @@ menu_options = {
         
 if __name__=='__main__':
     globalStop = False
-    version = 0.52
+    version = 0.53
     print('Checking for updates...')
     try:
         if (float(requests.get('https://raw.githubusercontent.com/SuspectWorkers/cf_scan_443/main/version.txt', verify=False, timeout=5).text) > float(version)):

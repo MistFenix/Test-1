@@ -46,9 +46,7 @@
 209.50.224.0/19
 216.22.0.0/18
 216.38.48.0/20
-
-Prefix   	Description   
-IRR Valid2.56.100.0/24	Seychelles
+2.56.100.0/24	Seychelles
 IRR Valid2.56.101.0/24	Seychelles
 IRR Valid2.58.212.0/22	Another Level BVNetherlands
 IRR Parent Valid2.58.213.0/24	Another Level BVNetherlands
